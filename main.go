@@ -18,27 +18,27 @@ import (
 	"github.com/faiface/beep/speaker"
 )
 
-// main 主函数 (Main function)
+// main 主函數 (Main function)
 func main() {
 	initMP3Player()
 	initFyneApp()
 
-	// 默认地区 (Default Area)
+	// 默認地區 (Default Area)
 	defaultArea := services.Listen.Area.Title
 
-	// 门店选择器 (Store Selector)
+	// 門店選擇器 (Store Selector)
 	storeWidget := widget.NewSelect(services.Store.ByAreaTitleForOptions(defaultArea), nil)
-	storeWidget.PlaceHolder = "请选择自提门店"
+	storeWidget.PlaceHolder = "請選擇自提門店"
 
-	// 型号选择器 (Product Selector)
+	// 型號選擇器 (Product Selector)
 	productWidget := widget.NewSelect(services.Product.ByAreaTitleForOptions(defaultArea), nil)
-	productWidget.PlaceHolder = "请选择 iPhone 型号"
+	productWidget.PlaceHolder = "請選擇 iPhone 型號"
 
-	// Bark 通知输入框
+	// Bark 通知輸入框
 	barkWidget := widget.NewEntry()
 	barkWidget.SetPlaceHolder("https://api.day.app/你的BarkKey")
 
-	// 地区选择器 (Area Selector)
+	// 地區選擇器 (Area Selector)
 	areaWidget := widget.NewRadioGroup(services.Area.ForOptions(), func(value string) {
 		storeWidget.Options = services.Store.ByAreaTitleForOptions(value)
 		storeWidget.ClearSelected()
@@ -52,19 +52,19 @@ func main() {
 
 	areaWidget.Horizontal = true
 
-	help := `1. 在 Apple 官网将需要购买的型号加入购物车
-2. 选择地区、门店和型号，点击“添加”按钮，将需要监听的型号添加到监听列表
-3. 点击“开始”按钮开始监听，检测到有货时会自动打开购物车页面
+	help := `1. 在 Apple 官網將需要購買的型號加入購物車
+2. 選擇地區、門店和型號，點擊“添加”按鈕，將需要監聽的型號添加到監聽列表
+3. 點擊“開始”按鈕開始監聽，檢測到有貨時會自動打開購物車頁面
 `
 
 	loadUserSettingsCache(areaWidget, storeWidget, productWidget, barkWidget)
 
-	// 初始化 GUI 窗口内容 (Initialize GUI)
+	// 初始化 GUI 窗口內容 (Initialize GUI)
 	view.Window.SetContent(container.NewVBox(
 		widget.NewLabel(help),
-		container.New(layout.NewFormLayout(), widget.NewLabel("选择地区:"), areaWidget),
-		container.New(layout.NewFormLayout(), widget.NewLabel("选择门店:"), storeWidget),
-		container.New(layout.NewFormLayout(), widget.NewLabel("选择型号:"), productWidget),
+		container.New(layout.NewFormLayout(), widget.NewLabel("選擇地區:"), areaWidget),
+		container.New(layout.NewFormLayout(), widget.NewLabel("選擇門店:"), storeWidget),
+		container.New(layout.NewFormLayout(), widget.NewLabel("選擇型號:"), productWidget),
 		container.New(layout.NewFormLayout(), widget.NewLabel("Bark 通知地址"), barkWidget),
 
 		container.NewBorder(nil, nil,
@@ -89,14 +89,14 @@ func initMP3Player() {
 	speaker.Init(SampleRate, SampleRate.N(time.Second/10))
 }
 
-// initFyneApp 初始化 Fyne 应用 (Initialize Fyne App)
+// initFyneApp 初始化 Fyne 應用 (Initialize Fyne App)
 func initFyneApp() {
 	view.App = app.NewWithID("apple-store-helper")
 	view.App.Settings().SetTheme(&theme.MyTheme{})
 	view.Window = view.App.NewWindow("Apple Store Helper")
 }
 
-// 加载用户设置缓存 (Load user settings cache)
+// 加載用戶設置緩存 (Load user settings cache)
 func loadUserSettingsCache(areaWidget *widget.RadioGroup, storeWidget *widget.Select, productWidget *widget.Select, barkNotifyWidget *widget.Entry) {
 	settings, err := services.LoadSettings()
 	if err == nil {
@@ -110,12 +110,12 @@ func loadUserSettingsCache(areaWidget *widget.RadioGroup, storeWidget *widget.Se
 	}
 }
 
-// 创建动作按钮 (Create action buttons)
+// 創建動作按鈕 (Create action buttons)
 func createActionButtons(areaWidget *widget.RadioGroup, storeWidget *widget.Select, productWidget *widget.Select, barkNotifyWidget *widget.Entry) *fyne.Container {
 	return container.NewHBox(
 		widget.NewButton("添加", func() {
 			if storeWidget.Selected == "" || productWidget.Selected == "" {
-				dialog.ShowError(errors.New("请选择门店和型号"), view.Window)
+				dialog.ShowError(errors.New("請選擇門店和型號"), view.Window)
 			} else {
 				services.Listen.Add(areaWidget.Selected, storeWidget.Selected, productWidget.Selected, barkNotifyWidget.Text)
 				services.SaveSettings(services.UserSettings{
@@ -131,31 +131,31 @@ func createActionButtons(areaWidget *widget.RadioGroup, storeWidget *widget.Sele
 			services.Listen.Clean()
 			services.ClearSettings()
 		}),
-		widget.NewButton("试听(有货提示音)", func() {
+		widget.NewButton("試聽(有貨提示音)", func() {
 			go services.Listen.AlertMp3()
 		}),
-		widget.NewButton("测试 Bark 通知", func() {
+		widget.NewButton("測試 Bark 通知", func() {
 			services.Listen.BarkNotifyUrl = barkNotifyWidget.Text
-			services.Listen.SendPushNotificationByBark("有货提醒（测试）", "此为测试提醒，点击通知将跳转到相关链接", "https://www.apple.com.cn/shop/bag")
+			services.Listen.SendPushNotificationByBark("有貨提醒（測試）", "此為測試提醒，點擊通知將跳轉到相關鏈接", "https://www.apple.com/shop/bag")
 		}),
 	)
 }
 
-// 创建控制按钮 (Create control buttons)
+// 創建控制按鈕 (Create control buttons)
 func createControlButtons() *fyne.Container {
 	return container.NewHBox(
-		widget.NewButton("开始", func() {
+		widget.NewButton("開始", func() {
 			services.Listen.Status.Set(services.Running)
 		}),
-		widget.NewButton("暂停", func() {
+		widget.NewButton("暫停", func() {
 			services.Listen.Status.Set(services.Pause)
 		}),
-		container.NewCenter(widget.NewLabel("状态:")),
+		container.NewCenter(widget.NewLabel("狀態:")),
 		container.NewCenter(widget.NewLabelWithData(services.Listen.Status)),
 	)
 }
 
-// createVersionLabel 创建版本标签 (Create version label)
+// createVersionLabel 創建版本標簽 (Create version label)
 func createVersionLabel() *fyne.Container {
 	return container.NewHBox(
 		layout.NewSpacer(),

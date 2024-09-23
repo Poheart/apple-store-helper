@@ -28,12 +28,12 @@ import (
 )
 
 const (
-	StatusOutStock = "无货"
-	StatusInStock  = "有货"
+	StatusOutStock = "無貨"
+	StatusInStock  = "有貨"
 	StatusWait     = "等待"
 
-	Pause   = "暂停"
-	Running = "监听中"
+	Pause   = "暫停"
+	Running = "監聽中"
 )
 
 var Listen = listenService{
@@ -132,17 +132,21 @@ func (s *listenService) Run() {
 						s.Status.Set(Pause)
 
 						var bagUrl = fmt.Sprintf("https://www.apple.com/%s/shop/bag", s.Area.ShortCode)
-						// 进入购物袋
+						// 進入購物袋
 						s.openBrowser(bagUrl)
-						msg := fmt.Sprintf("%s %s 有货", item.Store.CityStoreName, item.Product.Title)
+						msg := fmt.Sprintf("%s %s 有貨", item.Store.CityStoreName, item.Product.Title)
 						dialog.ShowInformation("匹配成功", msg, view.Window)
 						view.App.SendNotification(&fyne.Notification{
-							Title:   "有货提醒",
+							Title:   "有貨提醒",
 							Content: msg,
 						})
 						go s.AlertMp3()
-						go s.SendPushNotificationByBark("有货提醒", msg, bagUrl)
-						break
+						go s.SendPushNotificationByBark("有貨提醒", msg, bagUrl)
+
+						// delay for 10 seconds before next check
+						time.Sleep(time.Second * 30)
+						s.Status.Set(Running)
+						//break
 					} else {
 						s.UpdateStatus(key, StatusOutStock)
 					}
@@ -151,7 +155,7 @@ func (s *listenService) Run() {
 				s.UpdateLogStr()
 			}
 
-			time.Sleep(time.Millisecond * 500)
+			time.Sleep(time.Second * 20)
 		}
 	}()
 }
@@ -220,7 +224,7 @@ func (s *listenService) getSkuByLink(ch chan map[string]bool, skUrl string) {
 
 	resp, body, errs := gorequest.New().
 		Set("referer", "https://www.apple.com/shop/buy-iphone").
-		Set("user-agent", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/94.0.4606.71 Safari/537.36").
+		Set("user-agent", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Safari/537.36").
 		Timeout(time.Second * 3).Get(skUrl).End()
 	if len(errs) > 0 {
 		log.Println(errs)
@@ -239,7 +243,7 @@ func (s *listenService) getSkuByLink(ch chan map[string]bool, skUrl string) {
 	ch <- skus
 }
 
-// 型号对应预约地址
+// 型號對應預約地址
 //func (s *listenService) model2Url(productType string) string {
 //	// https://www.apple.com.cn/shop/buy-iphone/iphone-16
 //	// https://www.apple.com.cn/shop/buy-iphone/iphone-16-pro
@@ -294,7 +298,7 @@ func (s *listenService) SendPushNotificationByBark(title string, content string,
 		return
 	}
 
-	apiUrl := fmt.Sprintf("%s/%s/%s?url=%s", strings.TrimRight(s.BarkNotifyUrl, "/"), title, content, bagUrl)
+	apiUrl := fmt.Sprintf("%s/%s/%s?url=%s&sound=alarm&call=1&level=timeSensitive", strings.TrimRight(s.BarkNotifyUrl, "/"), title, content, bagUrl)
 
 	response, err := http.Get(apiUrl)
 	if err != nil {
